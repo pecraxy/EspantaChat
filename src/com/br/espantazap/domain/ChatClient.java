@@ -5,30 +5,37 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
-public class ChatClient {
+public class ChatClient implements Runnable{
     private static final String SERVER_ADDRESS = "127.0.0.1";
-    private Socket clientSocket;
+    private ClientSocket clientSocket;
     private Scanner in;
-    private PrintWriter out;
 
     public ChatClient(){
         in = new Scanner(System.in);
     }
 
     public void start() throws IOException {
-
+        clientSocket = new ClientSocket(new Socket(SERVER_ADDRESS, ChatServer.PORT));
         System.out.println("Cliente conectado ao servidor " + SERVER_ADDRESS + ":" + ChatServer.PORT);
-        clientSocket = new Socket(SERVER_ADDRESS, ChatServer.PORT);
-        this.out = new PrintWriter(clientSocket.getOutputStream(), true);
-        messageLoop("zezao");
+        new Thread(this).start();
+        messageLoop();
     }
 
-    private void messageLoop(String nome) throws IOException {
+    @Override
+    public void run(){
+        String msg;
+        while ((msg = clientSocket.getMsg()) != null){
+            System.out.printf("Msg recebida de: %s\n", msg);
+        }
+    }
+
+    private void messageLoop() throws IOException {
         String msg;
         do {
             System.out.print("Digite uma mensagem (ou sair para finalizar): ");
             msg = in.nextLine();
-            out.println(nome + ": " + msg);
+            clientSocket.sendMsg(msg);
+
         } while (!msg.equalsIgnoreCase("sair"));
     }
 
