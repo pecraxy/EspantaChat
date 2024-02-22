@@ -3,7 +3,7 @@ package com.br.espantazap.domain;
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
-
+//o
 public class ChatClient implements Runnable{
     private static final String SERVER_ADDRESS = "127.0.0.1";
     private ClientSocket clientSocket;
