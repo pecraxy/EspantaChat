@@ -2,13 +2,12 @@ package com.br.espantazap.domain;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class ChatClient implements Runnable{
     private static final String SERVER_ADDRESS = "127.0.0.1";
     private ClientSocket clientSocket;
-    private Scanner in;
+    private final Scanner in;
 
     public ChatClient(){
         in = new Scanner(System.in);
@@ -25,11 +24,11 @@ public class ChatClient implements Runnable{
     public void run(){
         String msg;
         while ((msg = clientSocket.getMsg()) != null){
-            System.out.printf("Msg recebida de: %s\n", msg);
+            System.out.printf("Msg recebida de: %s\n" , msg);
         }
     }
 
-    private void messageLoop() throws IOException {
+    private void messageLoop() {
         String msg;
         do {
             System.out.print("Digite uma mensagem (ou sair para finalizar): ");
