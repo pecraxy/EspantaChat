@@ -14,10 +14,14 @@ public class ChatClient implements Runnable{
     }
 
     public void start() throws IOException {
-        clientSocket = new ClientSocket(new Socket(SERVER_ADDRESS, ChatServer.PORT));
-        System.out.println("Cliente conectado ao servidor " + SERVER_ADDRESS + ":" + ChatServer.PORT);
-        new Thread(this).start();
-        messageLoop();
+        try{
+            clientSocket = new ClientSocket(new Socket(SERVER_ADDRESS, ChatServer.PORT));
+            System.out.println("Cliente conectado ao servidor " + SERVER_ADDRESS + ":" + ChatServer.PORT);
+            new Thread(this).start();
+            messageLoop();
+        } finally {
+            clientSocket.close();
+        }
     }
 
     @Override
@@ -34,7 +38,6 @@ public class ChatClient implements Runnable{
             System.out.print("Digite uma mensagem (ou sair para finalizar): ");
             msg = in.nextLine();
             clientSocket.sendMsg(msg);
-
         } while (!msg.equalsIgnoreCase("sair"));
     }
 

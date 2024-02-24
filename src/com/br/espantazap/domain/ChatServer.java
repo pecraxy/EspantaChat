@@ -2,6 +2,7 @@ package com.br.espantazap.domain;
 
 import java.io.*;
 import java.net.ServerSocket;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -16,6 +17,7 @@ public class ChatServer {
         System.out.println("Servidor iniciado na porta " + PORT);
         serverSocket = new ServerSocket(PORT);
         clientConnectionLop();
+        ChatClient chatClient = new ChatClient();
     }
 
     private void clientConnectionLop() throws IOException {
@@ -34,6 +36,7 @@ public class ChatServer {
                 System.out.printf("Msg recebida do cliente %s: %s\n",
                         clientSocket.getRemoteSocketAddress(),
                         msg);
+                sendMsgToAll(clientSocket, msg);
             }
         } finally {
             clientSocket.close();
@@ -41,9 +44,13 @@ public class ChatServer {
     }
 
     private void sendMsgToAll(ClientSocket sender, String msg){
-        for (ClientSocket clientSocket: this.clients){
+        Iterator<ClientSocket> iterator = clients.iterator();
+        while (iterator.hasNext()){
+            ClientSocket clientSocket = iterator.next();
             if(!sender.equals(clientSocket)){
-                clientSocket.sendMsg(msg);
+                if(!clientSocket.sendMsg(msg)){
+                    iterator.remove();
+                }
             }
         }
     }
