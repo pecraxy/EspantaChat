@@ -1,10 +1,14 @@
-package com.br.espantazap.gui;
+package main;
 
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import model.User;
+import service.ClientService;
+
 import java.awt.Color;
 import java.awt.CardLayout;
 import javax.swing.JLabel;
@@ -20,6 +24,7 @@ import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.IOException;
 import java.awt.event.ActionEvent;
 
 public class Login extends JFrame {
@@ -75,8 +80,8 @@ public class Login extends JFrame {
 //		Image img = new ImageIcon(this.getClass().getResource("/oscar.png")).getImage();
 		
 		JLabel imagem = new JLabel();
-		imagem.setIcon(new ImageIcon(Login.class.getResource("/com/br/espantazap/images/oscar.png")));
-		imagem.setBounds(-42, 130, 238, 560);
+		//imagem.setIcon(new ImageIcon(Login.class.getResource("/com/br/espantazap/images/oscar.png")));
+		imagem.setBounds(-40, 131, 238, 560);
 		panel.add(imagem);
 		
 		JLabel lblTexto = new JLabel("Digite o seu nome");
@@ -93,8 +98,12 @@ public class Login extends JFrame {
 		
 		
 		
-		JButton btnNewButton = new JButton("New button");
-		btnNewButton.addActionListener(e -> {
+		JButton btnEntrar = new JButton("Entrar");
+		btnEntrar.addActionListener(event -> {
+			User user = new User(caixaTexto.getText());
+			this.dispose();
+			Chat chat = new Chat(user);
+			chat.setVisible(true);
         });
 		
 		caixaTexto.addKeyListener(new KeyListener() {
@@ -103,9 +112,9 @@ public class Login extends JFrame {
 			public void keyTyped(KeyEvent e) {
 				
 				if (!caixaTexto.getText().isBlank()) {
-					btnNewButton.setEnabled(true);
+					btnEntrar.setEnabled(true);
 				} else {
-					btnNewButton.setEnabled(false);
+					btnEntrar.setEnabled(false);
 				}
 			}
 
@@ -123,8 +132,8 @@ public class Login extends JFrame {
 
 		});
 		
-		btnNewButton.setEnabled(false);
-		btnNewButton.setBounds(361, 359, 140, 43);
-		panel.add(btnNewButton);
+		btnEntrar.setEnabled(false);
+		btnEntrar.setBounds(361, 359, 140, 43);
+		panel.add(btnEntrar);
 	}
 }

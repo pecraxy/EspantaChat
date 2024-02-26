@@ -1,45 +1,54 @@
-package com.br.espantazap.domain;
+package service;
 
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 
+import model.Message;
+import model.User;
+
 //a
-public class ClientSocket {
+public class SocketService {
     private final Socket socket;
     private final BufferedReader in;
     private final PrintWriter out;
-    private String name;
+    private User user;
 
-    public ClientSocket(Socket socket) throws IOException {
+    public SocketService(Socket socket) throws IOException {
         this.socket = socket;
         System.out.println("Cliente " + socket.getRemoteSocketAddress() + " se conectou.");
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         this.out = new PrintWriter(socket.getOutputStream(), true, StandardCharsets.UTF_8);
     }
     
-    public ClientSocket(Socket socket, String name) throws IOException {
+    public SocketService(Socket socket, User user) throws IOException {
     	this(socket);
-    	this.name = name;
+    	this.user = user;
     }
-    
+ 
+    public User getUser() {
+    	return this.user;
+    }
     
     public SocketAddress getRemoteSocketAddress(){
         return socket.getRemoteSocketAddress();
     }
 
-    public String getMsg(){
+    public Message getMsg(){
         try{
-            return this.in.readLine();
+        	String rawMessage = in.readLine();
+        	String rawUser = rawMessage.substring(0, rawMessage.indexOf(':'));
+        	User newUser = new User(rawUser);
+        	Message msg = new Message(newUser, rawMessage);
+            return msg;
         }catch (IOException e){
+        	e.printStackTrace();
             return null;
-            //System.out.println(e.getMessage());
         }
     }
 
-
-    public boolean sendMsg(String msg){
+    public boolean sendMsg(Message msg){
         out.println(msg);
         return !out.checkError();
     }
