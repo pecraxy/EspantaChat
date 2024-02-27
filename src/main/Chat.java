@@ -21,6 +21,9 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -28,49 +31,64 @@ import java.util.Scanner;
 
 
 public class Chat extends javax.swing.JFrame implements Runnable{
-	
-	private javax.swing.JButton cmdRight;
+
+	private javax.swing.JButton btnSend;
 	private javax.swing.JPanel jPanel1;
 	private javax.swing.JScrollPane jScrollPane1;
 	private javax.swing.JScrollPane jScrollPane2;
 	private javax.swing.JPanel panel;
 	private javax.swing.JTextArea txt;
-	private static final String SERVER_ADDRESS = "127.0.0.1";
-    private SocketService clientSocket;
-    private User user;
 	
+    private SocketService socketService;
+    private final User user;
 	
-    public Chat() {
+    public Chat(User user) {
         initComponents();
         panel.setLayout(new MigLayout("fillx"));
+        this.user = user;
     }
     
-    public Chat(User user) {
-    	this();
-    	this.user = user;
-    }
-    
-    public void start() throws IOException {
-    	try{
-            this.clientSocket = new SocketService(new Socket(SERVER_ADDRESS, ServerService.PORT), user);
-            System.out.println("Você se conectou ao servidor " + SERVER_ADDRESS + ":" + ServerService.PORT);
-            new Thread(this).start();
-        } finally {
-            if (clientSocket.equals(null)) return;
-            clientSocket.close();
+    public void start(){
+    	this.setVisible(true);
+    	try { 
+    		this.socketService = new SocketService(new Socket(ServerService.SERVER_ADDRESS, ServerService.PORT), user);
+	    	JOptionPane.showMessageDialog(this, "Você se conectou ao servidor " + ServerService.SERVER_ADDRESS + ":" + ServerService.PORT);
+	    	Thread messageReceiver = new Thread(this);
+	    	messageReceiver.start();
+        }catch (IOException | NullPointerException e) {
+      	   	JOptionPane.showMessageDialog(this, "Não foi possível se conectar ao servidor. Inicie o servidor novamente ou cheque se seu firewall está bloqueando a liberação das portas.");
+      	   	this.dispose();
         }
     }
     
     @Override
     public void run() {
     	Message msg;
-        while ((msg = clientSocket.getMsg()) != null){
-            cmdLeftActionPerformed(msg.getMsg());
+        while ((msg = socketService.getMsg()) != null){
+            receivedMsg(msg.getMsg());
         }
     }
     
+    private void sendMsg(java.awt.event.ActionEvent evt) {
+        String text = txt.getText().trim();
+        if (text.isEmpty()) return;
+        if (socketService.sendMsg(new Message(user, text))) {
+        	Item_Right item = new Item_Right(text);
+            panel.add(item, "wrap, w 80%, al right");
+            txt.setText("");
+            panel.repaint();
+            panel.revalidate();
+        }
+    }
     
-    @SuppressWarnings("unchecked")
+    private void receivedMsg(String msg) {//GEN-FIRST:event_cmdLeftActionPerformed
+        String text = txt.getText().trim();
+        Item_Left item = new Item_Left(text);
+        panel.add(item, "wrap, w 80%");
+        panel.repaint();
+        panel.revalidate();
+    }
+    
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
@@ -78,15 +96,14 @@ public class Chat extends javax.swing.JFrame implements Runnable{
         panel = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         txt = new javax.swing.JTextArea();
-        //cmdLeft = new javax.swing.JButton();
-        cmdRight = new javax.swing.JButton();
-        cmdRight.setFont(new Font("Tahoma", Font.BOLD, 15));
-        cmdRight.setBounds(EXIT_ON_CLOSE, ABORT, 200, 95);
-        cmdRight.setPreferredSize(new Dimension(450, 9));
-        cmdRight.setMinimumSize(new Dimension(350, 95));
-        cmdRight.setMaximumSize(new Dimension(100, 95));
+        btnSend = new javax.swing.JButton();
+        btnSend.setFont(new Font("Tahoma", Font.BOLD, 15));
+        btnSend.setBounds(EXIT_ON_CLOSE, ABORT, 200, 95);
+        btnSend.setPreferredSize(new Dimension(450, 9));
+        btnSend.setMinimumSize(new Dimension(350, 95));
+        btnSend.setMaximumSize(new Dimension(100, 95));
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
 
@@ -111,27 +128,20 @@ public class Chat extends javax.swing.JFrame implements Runnable{
         txt.setRows(5);
         jScrollPane2.setViewportView(txt);
 
-//        cmdLeft.setText("Left");
-//        cmdLeft.addActionListener(new java.awt.event.ActionListener() {
-//            public void actionPerformed(java.awt.event.ActionEvent evt) {
-//                cmdLeftActionPerformed(evt);
-//            }
-//        });
-
-        cmdRight.setText("Enviar");
+        btnSend.setText("Enviar");
         txt.addKeyListener(new KeyListener() {
-
-			@Override
-			public void keyTyped(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
 
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == e.VK_ENTER) {
-					cmdRightActionPerformed(null);
+					sendMsg(null);
 				}
+				
+			}
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+				// TODO Auto-generated method stub
 				
 			}
 
@@ -142,9 +152,9 @@ public class Chat extends javax.swing.JFrame implements Runnable{
 			}
         	
         });
-        cmdRight.addActionListener(new java.awt.event.ActionListener() {
+        btnSend.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cmdRightActionPerformed(evt);
+                sendMsg(evt);
             }
         });
 
@@ -157,7 +167,7 @@ public class Chat extends javax.swing.JFrame implements Runnable{
                 .addComponent(jScrollPane2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(cmdRight, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnSend, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(10, 10, 10))
         );
         jPanel1Layout.setVerticalGroup(
@@ -169,7 +179,7 @@ public class Chat extends javax.swing.JFrame implements Runnable{
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cmdRight)))
+                        .addComponent(btnSend)))
                 .addContainerGap())
         );
 
@@ -183,42 +193,18 @@ public class Chat extends javax.swing.JFrame implements Runnable{
         		.addComponent(jPanel1, GroupLayout.DEFAULT_SIZE, 309, Short.MAX_VALUE)
         );
         getContentPane().setLayout(layout);
+        
+        this.addWindowListener(new WindowAdapter() {
+    		@Override
+			public void windowClosed(WindowEvent e) {
+    			
+			}
+    	});
 
         pack();
         setLocationRelativeTo(null);
-        cmdRight.setBounds(EXIT_ON_CLOSE, ABORT, WIDTH, HEIGHT);
-    }
-
-    private void cmdLeftActionPerformed(String msg) {//GEN-FIRST:event_cmdLeftActionPerformed
-        String text = txt.getText().trim();
-        Item_Left item = new Item_Left(text);
-        panel.add(item, "wrap, w 80%");
-        panel.repaint();
-        panel.revalidate();
-    }
-
-    private void cmdRightActionPerformed(java.awt.event.ActionEvent evt) {
-        String text = txt.getText().trim();
-        if (text.isEmpty()) return;
-        if (clientSocket.sendMsg(new Message(user, text))) {
-        	Item_Right item = new Item_Right(text);
-            panel.add(item, "wrap, w 80%, al right");
-            txt.setText("");
-            panel.repaint();
-            panel.revalidate();
-        }
-        
-    }
-    
-    
-    public static void main(String args[], User user) {
-       Chat chat = new Chat(user);
-       try {
-    	   chat.setVisible(true);
-    	   chat.start();
-       } catch (IOException | NullPointerException e) {
-    	   JOptionPane.showMessageDialog(null, "Não foi possível se conectar ao servidor. Inicie o servidor novamente ou cheque se seu firewall está bloqueando a liberação das portas.");
-       }
+        btnSend.setBounds(EXIT_ON_CLOSE, ABORT, WIDTH, HEIGHT);
     }
 }
+    
 

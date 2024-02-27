@@ -13,6 +13,7 @@ import java.util.Map;
 import model.Message;
 
 public class ServerService {
+	public static final String SERVER_ADDRESS = "127.0.0.1";
     public static final int PORT = 4000;
     private ServerSocket serverSocket;
     private BufferedReader in;

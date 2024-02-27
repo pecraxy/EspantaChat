@@ -103,7 +103,7 @@ public class Login extends JFrame {
 			User user = new User(caixaTexto.getText());
 			this.dispose();
 			Chat chat = new Chat(user);
-			chat.setVisible(true);
+			chat.start();
         });
 		
 		caixaTexto.addKeyListener(new KeyListener() {
