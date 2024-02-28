@@ -14,6 +14,7 @@ public class SocketService {
     private final BufferedReader in;
     private final PrintWriter out;
     private User user;
+    
 
     public SocketService(Socket socket) throws IOException {
         this.socket = socket;
@@ -37,7 +38,9 @@ public class SocketService {
 
     public Message getMsg(){
         try{
+        	if (socket.isClosed()) return null;
         	String rawMessage = in.readLine();
+        	if (rawMessage == null || rawMessage.equals("end")) return null;
         	String rawUser = rawMessage.substring(0, rawMessage.indexOf(':'));
         	User newUser = new User(rawUser);
         	Message msg = new Message(newUser, rawMessage);
@@ -51,6 +54,16 @@ public class SocketService {
     public boolean sendMsg(Message msg){
         out.println(msg);
         return !out.checkError();
+    }
+    public boolean sendMsg(boolean endConn) {
+    	try {
+			socket.shutdownOutput();
+			out.println("end");
+			} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	return !out.checkError();
     }
 
 

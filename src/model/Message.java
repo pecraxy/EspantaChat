@@ -3,6 +3,7 @@ package model;
 public class Message {
 	private final User messageSender;
 	private final String msg;
+	public final static boolean END_CONNECTION = true;
 	
 	public Message(User messageSender, String msg) {
 		this.messageSender = messageSender;

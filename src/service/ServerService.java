@@ -39,7 +39,7 @@ public class ServerService {
         Message msg;
         try{
             while((msg = clientSocket.getMsg()) != null){
-                if ("sair".equalsIgnoreCase(msg.getMsg())) return;
+                if ("end".equalsIgnoreCase(msg.getMsg())) return;
                 System.out.printf("%s\n", msg.getMsg());
                 sendMsgToAll(clientSocket, msg);
             }
