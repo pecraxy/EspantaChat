@@ -26,6 +26,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
@@ -55,7 +56,14 @@ public class Chat extends javax.swing.JFrame implements Runnable{
 	    	JOptionPane.showMessageDialog(this, "Você se conectou ao servidor " + ServerService.SERVER_ADDRESS + ":" + ServerService.PORT);
 	    	Thread messageReceiver = new Thread(this);
 	    	messageReceiver.start();
-        }catch (IOException | NullPointerException e) {
+	    	this.addWindowListener(new WindowAdapter() {
+	    		@Override
+	 			public void windowClosed(WindowEvent e) {
+	    			socketService.sendMsg(Message.END_CONNECTION);
+	     			messageReceiver.interrupt();
+	 			}
+	     	});
+        } catch (IOException | NullPointerException e) {
       	   	JOptionPane.showMessageDialog(this, "Não foi possível se conectar ao servidor. Inicie o servidor novamente ou cheque se seu firewall está bloqueando a liberação das portas.");
       	   	this.dispose();
         }
@@ -64,9 +72,10 @@ public class Chat extends javax.swing.JFrame implements Runnable{
     @Override
     public void run() {
     	Message msg;
-        while ((msg = socketService.getMsg()) != null){
-            receivedMsg(msg.getMsg());
-        }
+		while ((msg = socketService.getMsg()) != null){
+			
+		    receivedMsg(msg.toString());
+		}
     }
     
     private void sendMsg(java.awt.event.ActionEvent evt) {
@@ -81,8 +90,8 @@ public class Chat extends javax.swing.JFrame implements Runnable{
         }
     }
     
-    private void receivedMsg(String msg) {//GEN-FIRST:event_cmdLeftActionPerformed
-        String text = txt.getText().trim();
+    private void receivedMsg(String msg) {
+        String text = msg.trim();
         Item_Left item = new Item_Left(text);
         panel.add(item, "wrap, w 80%");
         panel.repaint();
@@ -193,13 +202,6 @@ public class Chat extends javax.swing.JFrame implements Runnable{
         		.addComponent(jPanel1, GroupLayout.DEFAULT_SIZE, 309, Short.MAX_VALUE)
         );
         getContentPane().setLayout(layout);
-        
-        this.addWindowListener(new WindowAdapter() {
-    		@Override
-			public void windowClosed(WindowEvent e) {
-    			
-			}
-    	});
 
         pack();
         setLocationRelativeTo(null);

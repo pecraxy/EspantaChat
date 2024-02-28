@@ -97,7 +97,6 @@ public class Login extends JFrame {
 		caixaTexto.setColumns(10);
 		
 		
-		
 		JButton btnEntrar = new JButton("Entrar");
 		btnEntrar.addActionListener(event -> {
 			User user = new User(caixaTexto.getText());
