@@ -19,7 +19,7 @@ public class SocketService {
     public SocketService(Socket socket) throws IOException {
         this.socket = socket;
         System.out.println("Cliente " + socket.getRemoteSocketAddress() + " se conectou.");
-        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
         this.out = new PrintWriter(socket.getOutputStream(), true, StandardCharsets.UTF_8);
     }
     
@@ -39,11 +39,12 @@ public class SocketService {
     public Message getMsg(){
         try{
         	if (socket.isClosed()) return null;
-        	String rawMessage = in.readLine();
-        	if (rawMessage == null || rawMessage.equals("end")) return null;
-        	String rawUser = rawMessage.substring(0, rawMessage.indexOf(':'));
-        	User newUser = new User(rawUser);
-        	Message msg = new Message(newUser, rawMessage);
+        	String tempMsg = in.readLine();
+        	if (tempMsg == null || tempMsg.equals("end")) return null;
+        	String rawMsg = tempMsg.substring(tempMsg.indexOf(':') + 2, tempMsg.length());
+        	String tempUser = tempMsg.substring(0, tempMsg.indexOf(':'));
+        	User newUser = new User(tempUser);
+        	Message msg = new Message(newUser, rawMsg);
             return msg;
         }catch (IOException e){
         	e.printStackTrace();
@@ -55,10 +56,10 @@ public class SocketService {
         out.println(msg);
         return !out.checkError();
     }
-    public boolean sendMsg(boolean endConn) {
+    public boolean sendMsg(User user, boolean endConn) {
     	try {
+    		out.println(user.getNickname()+ ": end");
 			socket.shutdownOutput();
-			out.println("end");
 			} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -76,9 +77,4 @@ public class SocketService {
             System.out.println("Erro ao fechar.");
         }
     }
-
-	public void endConnection() {
-		this.socket.
-		
-	}
 }

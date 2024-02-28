@@ -6,11 +6,16 @@
 package main;
 
 import net.miginfocom.swing.MigLayout;
-import service.ClientService;
+
 import service.ServerService;
 import service.SocketService;
 
 import javax.swing.GroupLayout.Alignment;
+
+import components.Item_Left;
+import components.Item_Right;
+import components.Item_Server;
+
 import javax.swing.JOptionPane;
 
 import model.Message;
@@ -41,25 +46,25 @@ public class Chat extends javax.swing.JFrame implements Runnable{
 	private javax.swing.JTextArea txt;
 	
     private SocketService socketService;
-    private final User user;
+    private final User currentUser;
 	
     public Chat(User user) {
         initComponents();
         panel.setLayout(new MigLayout("fillx"));
-        this.user = user;
+        this.currentUser = user;
     }
     
     public void start(){
     	this.setVisible(true);
     	try { 
-    		this.socketService = new SocketService(new Socket(ServerService.SERVER_ADDRESS, ServerService.PORT), user);
+    		this.socketService = new SocketService(new Socket(ServerService.SERVER_ADDRESS, ServerService.PORT), currentUser);
 	    	JOptionPane.showMessageDialog(this, "Você se conectou ao servidor " + ServerService.SERVER_ADDRESS + ":" + ServerService.PORT);
 	    	Thread messageReceiver = new Thread(this);
 	    	messageReceiver.start();
 	    	this.addWindowListener(new WindowAdapter() {
 	    		@Override
-	 			public void windowClosed(WindowEvent e) {
-	    			socketService.sendMsg(Message.END_CONNECTION);
+	 			public void windowClosing(WindowEvent e) {
+	    			socketService.sendMsg(currentUser, Message.END_CONNECTION);
 	     			messageReceiver.interrupt();
 	 			}
 	     	});
@@ -73,7 +78,10 @@ public class Chat extends javax.swing.JFrame implements Runnable{
     public void run() {
     	Message msg;
 		while ((msg = socketService.getMsg()) != null){
-			
+			if (msg.getUser().getNickname().equals("server")) {
+				serverMsg(msg.getMsg());
+				break;
+			}
 		    receivedMsg(msg.toString());
 		}
     }
@@ -81,7 +89,7 @@ public class Chat extends javax.swing.JFrame implements Runnable{
     private void sendMsg(java.awt.event.ActionEvent evt) {
         String text = txt.getText().trim();
         if (text.isEmpty()) return;
-        if (socketService.sendMsg(new Message(user, text))) {
+        if (socketService.sendMsg(new Message(currentUser, text))) {
         	Item_Right item = new Item_Right(text);
             panel.add(item, "wrap, w 80%, al right");
             txt.setText("");
@@ -96,6 +104,14 @@ public class Chat extends javax.swing.JFrame implements Runnable{
         panel.add(item, "wrap, w 80%");
         panel.repaint();
         panel.revalidate();
+    }
+    
+    private void serverMsg(String msg) {
+    	String text = msg.trim();
+    	Item_Server item = new Item_Server(text);
+    	panel.add(item, "wrap, w 80%, al center");
+    	panel.repaint();
+    	panel.revalidate();
     }
     
     private void initComponents() {
@@ -205,7 +221,6 @@ public class Chat extends javax.swing.JFrame implements Runnable{
 
         pack();
         setLocationRelativeTo(null);
-        btnSend.setBounds(EXIT_ON_CLOSE, ABORT, WIDTH, HEIGHT);
     }
 }
     

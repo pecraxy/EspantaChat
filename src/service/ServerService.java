@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.Map;
 
 import model.Message;
+import model.User;
 
 public class ServerService {
 	public static final String SERVER_ADDRESS = "127.0.0.1";
     public static final int PORT = 4000;
     private ServerSocket serverSocket;
-    private BufferedReader in;
     private final List<SocketService> clients = new LinkedList<>();
 
 
@@ -24,7 +24,7 @@ public class ServerService {
         System.out.println("Servidor iniciado na porta " + PORT);
         serverSocket = new ServerSocket(PORT);
         clientConnectionLop();
-        //ClientService chatClient = new ClientService();
+
     }
 
     private void clientConnectionLop() throws IOException {
@@ -39,8 +39,15 @@ public class ServerService {
         Message msg;
         try{
             while((msg = clientSocket.getMsg()) != null){
-                if ("end".equalsIgnoreCase(msg.getMsg())) return;
-                System.out.printf("%s\n", msg.getMsg());
+                if ("end".equalsIgnoreCase(msg.getMsg())) {
+                	sendMsgToAll(clientSocket, new Message(
+                			new User("server"),
+                			"Usuário \"" + msg.getUser().getNickname() + "\" se desconectou."
+                	));
+                	System.out.println("Cliente " + clientSocket.getRemoteSocketAddress() + " se desconectou.");
+                	return;
+                }
+                System.out.printf("%s\n", msg.toString());
                 sendMsgToAll(clientSocket, msg);
             }
         } finally {
