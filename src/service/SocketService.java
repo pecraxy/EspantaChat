@@ -63,4 +63,9 @@ public class SocketService {
             System.out.println("Erro ao fechar.");
         }
     }
+
+	public void endConnection() {
+		this.socket.
+		
+	}
 }
